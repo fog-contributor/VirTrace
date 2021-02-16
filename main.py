@@ -2,17 +2,24 @@ from napalm import get_network_driver
 from pprint import pprint
 from tabulate import tabulate
 import ipaddress
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
+import yaml
 
+logging.basicConfig(
+    format = '%(threadName)s %(name)s %(levelname)s: %(message)s',
+    level=logging.INFO)
 
 ######## Part with information from Esigth or another Source of True ######
 
 #Define List of equipment, where is each object in list represent Network Node and its parameters
 equipment_list = [{'Hostname':'AR1',
-                   'IP-mgmt':'192.168.1.1'},
+                   'IP-mgmt':'192.168.111.10'},
                   {'Hostname':'AR2',
-                   'IP-mgmt':'192.168.2.2'},
+                   'IP-mgmt':'192.168.111.20'},
                   {'Hostname':'AR3',
-                  'IP-mgmt':'192.168.3.3'}]
+                  'IP-mgmt':'192.168.111.30'}]
 
 ######### Main bony ############
 
@@ -21,8 +28,11 @@ def enrichment_with_ip_interfaces(node):
     '''
     This function for enrichment current node object with additional keys(fields) - Ip Interfaces
     :param node: Node object (dictionary)
-    :return: node (enriched) object with 'IP_interfaces' key if succes. In failure - not enriched node and error description
+    :return: node (enriched) object with 'IP_interfaces' key if success. In failure - not enriched node and error description
     '''
+    start_msg = '===> {} Connection: {}'
+    received_msg = '<=== {} Received: {}'
+    logging.info(start_msg.format(datetime.now().time(), node['IP-mgmt']))
     driver = get_network_driver('huawei_vrp')
     try:
         with driver(hostname=node['IP-mgmt'],password='huawei',username='huawei') as device:
@@ -81,7 +91,7 @@ def node_modified(node):
 
 
 
-def where_is_ip(ip_address):
+def where_is_ip(ip_address,equipment_list_modified):
     '''
     This function for understanding - to which interface belong ip_address.
     ip_address - string.
@@ -96,21 +106,38 @@ def where_is_ip(ip_address):
     except ValueError as err:
         print('Incorrect input for IP-address:\n'+str(err))
         return None
+    success_search_flag = False
+    for node in equipment_list_modified:
+        for interface, ipv4interface in node['IP_interfaces'].items():
+            for subnet in ipv4interface:
+                if ip in subnet.network:
+                    success_search_flag = True
+                    print(f'Gotcha! This address {ip} belong to network {subnet.network}\n'
+                          f'This is subnet on interface of Router {node["Hostname"]} and interface is {interface}')
+    if not success_search_flag:
+        print('Sorry, but nothing was fing ... ')
+
 
 
 
 
 if __name__=='__main__':
-    '''
+
     equipment_list = [{'Hostname': 'AR1',
-                   'IP-mgmt': '192.168.1.1'},
+                   'IP-mgmt': '192.168.111.10'},
                   {'Hostname': 'AR2',
-                   'IP-mgmt': '192.168.2.2'},
+                   'IP-mgmt': '192.168.111.20'},
                   {'Hostname': 'AR3',
-                   'IP-mgmt': '192.168.3.3'}]  
-    '''
-    equipment_list = [{'Hostname': 'AR1',
-      'IP-mgmt': '192.168.1.1',
+                   'IP-mgmt': '192.168.111.30'},
+                    {'Hostname': 'AR4',
+                       'IP-mgmt': '192.168.111.40'},
+                      {'Hostname': 'AR5',
+                       'IP-mgmt': '192.168.111.50'},
+                      {'Hostname': 'AR6',
+                       'IP-mgmt': '192.168.111.60'}]
+
+    '''equipment_list = [{'Hostname': 'AR1',
+      'IP-mgmt': '192.168.111.10',
       'IP_interfaces': {'GigabitEthernet0/0/0': {'ipv4': {'10.0.12.1': {'prefix_length': 24}}},
                         'GigabitEthernet0/0/1': {'ipv4': {'10.0.13.1': {'prefix_length': 24}}},
                         'LoopBack0': {'ipv4': {'1.1.1.1': {'prefix_length': 32}}},
@@ -118,53 +145,47 @@ if __name__=='__main__':
                         'LoopBack222': {'ipv4': {'111.111.111.111': {'prefix_length': 32},
                                                  '12.12.12.12': {'prefix_length': 32}}}}},
      {'Hostname': 'AR2',
-      'IP-mgmt': '192.168.2.2',
+      'IP-mgmt': '192.168.111.20',
       'IP_interfaces': {'GigabitEthernet0/0/0': {'ipv4': {'10.0.12.2': {'prefix_length': 24}}},
                         'GigabitEthernet0/0/1': {'ipv4': {'10.0.23.2': {'prefix_length': 24}}},
                         'LoopBack0': {'ipv4': {'2.2.2.2': {'prefix_length': 32}}},
                         'LoopBack1': {'ipv4': {'192.168.2.2': {'prefix_length': 32}}}}},
      {'Hostname': 'AR3',
-      'IP-mgmt': '192.168.3.3',
+      'IP-mgmt': '192.168.111.30',
       'IP_interfaces': {'GigabitEthernet0/0/0': {'ipv4': {'10.0.23.3': {'prefix_length': 24}}},
                         'GigabitEthernet0/0/1': {'ipv4': {'10.0.13.3': {'prefix_length': 24}}},
                         'LoopBack0': {'ipv4': {'3.3.3.3': {'prefix_length': 32}}},
                         'LoopBack1': {'ipv4': {'192.168.3.3': {'prefix_length': 32}}},
-                        'Vlanif10': {'ipv4': {'192.168.12.10': {'prefix_length': 24}}}}}]
+                        'Vlanif10': {'ipv4': {'192.168.12.10': {'prefix_length': 24}}}}}]'''
+    begin = datetime.now()
+    print(begin)
     #At first - enrich nodes with IP_interfaces
-    #for node in equipment_list:
-        #enrichment_with_ip_interfaces(node)
-    #pprint(equipment_list)
-    #At second - translate IP_interfaces into IP_int object
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_list = []
+        for node in equipment_list:
+            future = executor.submit(enrichment_with_ip_interfaces,node)
+            future_list.append(future)
+        for f in as_completed(future_list):
+            print(f.result)
+
+
+
+
 
     for node in equipment_list:
         node_modified(node)
+        print(datetime.now()-begin)
     pprint(equipment_list)
 
-    '''
-        dict_of_ip_int ={}
-    for node in equipment_list:
-        dict_of_ip_int[node['Hostname']] = node_list_of_interfaces(node)
-    pprint(dict_of_ip_int)
-    ip_address = input('Input IP-address')
-    try:
-        ip = ipaddress.ip_address(ip_address)
-    except ValueError as err:
-        print('Incorrect input for IP-address:\n'+str(err))
-        exit(-1)
-    success_search_flag = False
-    for node,interfaces in dict_of_ip_int.items():
-        for interface in interfaces:
-            if ip in interface.network:
-                success_search_flag = True
-                print(f'Gotcha! This address {ip} belong to network {interface.network}\n'
-                      f'This is subnet on interface of Router {node}')
-    if not success_search_flag:
-        print('Sorry, but nothing was fing ... ')
+    where_is_ip('10.0.45.22',equipment_list)
+    print(datetime.now()-begin)
+
 
     
     
     
-    '''
+
 
 
 
