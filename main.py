@@ -8,6 +8,7 @@ import logging
 import yaml,json
 import easygui
 
+
 logging.basicConfig(
     format = '%(threadName)s %(name)s %(levelname)s: %(message)s',
     level=logging.INFO)
@@ -77,7 +78,7 @@ def where_is_ip(ip_address,equipment_list_modified):
     If we find match - return Name of router (and interface) in tuple - ('R1':'GigabitEthernet0/1') (without VRF reffering :(()
     If we don't find any matches - return  None (empty tuple)
     :param ip_address:
-    :return:
+    :return: list of dictionaries [ {'name':'...','interface':'...'} ]
     '''
     #verify, that user input was correct (IP-address)
     try:
@@ -86,6 +87,7 @@ def where_is_ip(ip_address,equipment_list_modified):
         print('Incorrect input for IP-address:\n'+str(err))
         return None
     success_search_flag = False
+    list_of_success = []
     for node in equipment_list_modified:
         if node.get('IP_interfaces'):
             for interface, ipv4interface in node['IP_interfaces'].items():
@@ -94,10 +96,70 @@ def where_is_ip(ip_address,equipment_list_modified):
                         success_search_flag = True
                         print(f'Gotcha! This address {ip} belong to network {subnet.network}\n'
                               f'This is subnet on interface of Router {node["Hostname"]} and interface is {interface}')
+                        list_of_success.append({'name':f'{node["Hostname"]}','interface':interface})
         else:
             print(f'Node {node["Hostname"]} is skipped, because there is no IP-interfaces in current snapshot 🙅‍♂️')
     if not success_search_flag:
         print('Sorry, but nothing was fing ... ')
+        return []
+    return list_of_success
+
+def create_json_to_visualize(source_ip,destination_ip,snapshot_data):
+    '''
+    This function create graph.json file - that will be used for visualization of traceroute.
+    Should be notice, that traceroute in visualization - is not simmetrical. Can be assimetrical paths in back direction.
+    :param source_ip[str]: source_ip (from which)
+    :param destination_ip[str]: destination_ip  (to which)
+    :param snapshot_data[Object]:
+    :return: file graph.json
+    '''
+    source = where_is_ip(source_ip,snapshot_data) #[ {'name':'...','interface':'...'},{} ]
+    destination = where_is_ip(destination_ip, snapshot_data)
+    nodes = [{'name': f'{source_ip}'}]
+    if (source and destination):
+        if len(source)==1:
+            nodes.extend(source)
+        else:
+            print(f'Найдено более чем одно совпадение по {source_ip} --> {source}\n'
+                  f'Граф не будет построен (пока что демо)')
+            return False
+        if len(destination)==1:
+            nodes.extend(destination)
+        else:
+            print(f'Найдено более чем одно совпадение по {destination_ip} --> {destination}\n'
+                  f'Граф не будет построен (пока что демо)')
+            return False
+        nodes.append({'name':f'{destination_ip}'})
+    elif not source:
+        print('В снапшоте не найден Source IP')
+        return False
+    elif not destination:
+        print('В снапшоте не найден Destination IP')
+        return False
+    data_to_json = {
+        'nodes': nodes,
+        'links': [
+            {
+                "source": 0,
+                "target": 1
+            },
+            {
+                "source": 1,
+                "target": 2
+            },
+            {
+                "source": 2,
+                "target": 3
+            }
+        ]
+    }
+    try:
+        with open(r'flaskr/static/graph.json', 'w') as f:
+            json.dump(data_to_json, f)
+    except Exception as err:
+        print(' Some error occured while write graph.json file\n',err)
+        return False
+    return True
 
 def save_snapshot(nodes,mode='yaml'):
     '''
@@ -127,7 +189,8 @@ def init_snapshot(mode='yaml'):
     try:
         if mode == 'yaml':
             path = easygui.fileopenbox()
-            with open(path,'r+') as file:
+            print(path)
+            with open(fr'{path}','r+') as file:
                 equipment_list = yaml.load(file,Loader=yaml.Loader)
             return equipment_list
     except Exception as err:
@@ -138,25 +201,18 @@ def init_snapshot(mode='yaml'):
 
 if __name__=='__main__':
 
-    '''
+
     equipment_list = [{'Hostname': 'AR1',
-               'IP-mgmt': '192.168.111.10'},
+               'IP-mgmt': '192.168.1.1'},
               {'Hostname': 'AR2',
-               'IP-mgmt': '192.168.111.20'},
+               'IP-mgmt': '192.168.2.2'},
               {'Hostname': 'AR3',
-               'IP-mgmt': '192.168.111.30'},
-                {'Hostname': 'AR4',
-                   'IP-mgmt': '192.168.111.40'},
-                  {'Hostname': 'AR5',
-                   'IP-mgmt': '192.168.111.50'},
-                  {'Hostname': 'AR6',
-                   'IP-mgmt': '192.168.111.60'}]
+               'IP-mgmt': '192.168.3.3'}]
     
-    '''
+
 
     begin = datetime.now()
     print(begin)
-
     equipment_list = init_snapshot()
 
     pprint(equipment_list)
@@ -169,11 +225,10 @@ if __name__=='__main__':
     save_snapshot(equipment_list)
     '''
 
-    where_is_ip('1.1.1.12',equipment_list)
+    pprint(create_json_to_visualize('2.2.2.2','12.12.12.12',equipment_list))
     print(datetime.now()-begin)
 
 
-    
     
     
 

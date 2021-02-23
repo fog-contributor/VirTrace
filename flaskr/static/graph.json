@@ -1,0 +1,1 @@
+{"nodes": [{"name": "2.2.2.2"}, {"name": "AR2", "interface": "LoopBack0"}, {"name": "AR1", "interface": "LoopBack0"}, {"name": "1.1.1.1"}], "links": [{"source": 0, "target": 1}, {"source": 1, "target": 2}, {"source": 2, "target": 3}]}

@@ -1,0 +1,56 @@
+- Hostname: AR1
+  IP-mgmt: 192.168.1.1
+  IP_interfaces:
+    GigabitEthernet0/0/0:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 10.0.12.1/24
+    GigabitEthernet0/0/1:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 10.0.13.1/24
+    LoopBack0:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 1.1.1.1/32
+    LoopBack1:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 192.168.1.1/32
+    LoopBack222:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 111.111.111.111/32
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 12.12.12.12/32
+- Hostname: AR2
+  IP-mgmt: 192.168.2.2
+  IP_interfaces:
+    GigabitEthernet0/0/0:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 10.0.12.2/24
+    GigabitEthernet0/0/1:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 10.0.23.2/24
+    LoopBack0:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 2.2.2.2/32
+    LoopBack1:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 192.168.2.2/32
+- Hostname: AR3
+  IP-mgmt: 192.168.3.3
+  IP_interfaces:
+    GigabitEthernet0/0/0:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 10.0.23.3/24
+    GigabitEthernet0/0/1:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 10.0.13.3/24
+    LoopBack0:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 3.3.3.3/32
+    LoopBack1:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 192.168.3.3/32
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 12.12.12.12/32
+    Vlanif10:
+    - !!python/object/apply:ipaddress.IPv4Interface
+      - 192.168.12.10/24
+
