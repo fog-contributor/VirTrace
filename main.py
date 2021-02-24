@@ -4,6 +4,7 @@ from tabulate import tabulate
 import ipaddress
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import textfsm
 import logging
 import yaml,json
 import easygui
@@ -46,6 +47,34 @@ def enrichment_with_ip_interfaces(node):
     except Exception as err:
         print('Some unexpected error ocurred:\n', err)
         return node
+
+def get_route_to_ip(dest_ip,node,vendor='huawei'):
+    '''
+    This function get ip route output from cli (for some vendor)
+    :param dest_ip:
+    :param node:
+    :param vendor:
+    :return:
+    '''
+    if vendor=='huawei':
+        driver = get_network_driver('huawei_vrp')
+        try:
+            with driver(hostname=node['IP-mgmt'],password='huawei',username='huawei') as device:
+                #Gather ip information from interfaces
+                ip_route = device.cli([f'display ip rout {dest_ip} verbose'])
+                print(ip_route)
+                ######vrrp_output = device.cli(f'display ip routing table {dest_ip} verbose')
+            #parse output information with TextFSM
+            with open('textfsm_huawei_routing_verbose.template') as template:
+                fsm = textfsm.TextFSM(template)
+                result = fsm.ParseText(list(ip_route.values())[0])
+            print(result)
+            print(tabulate(result,headers=fsm.header))
+            return result
+        except Exception as err:
+            print('Some unexpected error ocurred:\n', err)
+            return None
+
 
 def node_modified(node):
     '''
@@ -197,6 +226,50 @@ def init_snapshot(mode='yaml'):
         print(' Some error occurred while opening snapshot!\n',err)
         return []
 
+def find_interface(ipv4_interface,equipment_list):
+    '''
+    This function find matches in snapshot for particular IP-interface.
+    :param ipv4_interface: IPv4address object
+    :param equipment_list: Enriched snapshot of network state
+    :return: next-hop item (node object)
+    '''
+    node = {}
+    for item in equipment_list:
+        for address in item['IP_interfaces'].values():
+            for _item in address:
+                if ipv4_interface == _item.ip:
+                    print('Find interface!')
+                    node.update(item)
+    return node
+
+def query_next_router(destination_ip,next_router):
+    '''
+    This function find matches in snapshot for particular IP-interface.
+    :param destination_ip: destination ip
+    :param next_router: node object
+    :return: list of next-hop_ips
+    '''
+    next_hop_ips = []
+    result_of_query_routing_table = get_route_to_ip(destination_ip,next_router)
+    print(result_of_query_routing_table)
+    for route in result_of_query_routing_table:
+        if route[2].lower() != 'direct':
+            next_hop_ips.append(ipaddress.ip_interface(route[3]))
+        else:
+            print(f'End router was finded!\n'
+                  f'End router that terminate subnet for destination IP is {next_router["Hostname"]}')
+            #  Should Do adding to graph.json
+            to_graph_json["nodes"].extend([{"name":next_router["Hostname"]}, {"name":f"{destination_ip}"}])
+            to_graph_json["links"].extend([{"source": source_id, "target": target_id}, {"source": source_id+1, "target": target_id+1}])
+            try:
+                with open(r'flaskr/static/graph.json', 'w') as f:
+                    json.dump(to_graph_json, f)
+                exit(-1)
+            except Exception as err:
+                print(' Some error occured while write graph.json file\n',err)
+                exit(-1)
+    return next_hop_ips
+
 
 
 if __name__=='__main__':
@@ -225,8 +298,95 @@ if __name__=='__main__':
     save_snapshot(equipment_list)
     '''
 
-    pprint(create_json_to_visualize('2.2.2.2','12.12.12.12',equipment_list))
-    print(datetime.now()-begin)
+    #pprint(create_json_to_visualize('5.5.5.5','1.1.1.1',equipment_list))
+    #####################################
+    source_ip = '11.1.1.1'
+    destination_ip = '6.6.6.6'
+    source_id = 0
+    target_id = 1
+    #Define graph.json
+    to_graph_json = {
+        "nodes":
+            [
+                {"name": f"{source_ip}"}
+            ],
+        "links":
+            [
+            ]
+    }
+    #Find source IP
+    list_of_source_routers = where_is_ip(source_ip,equipment_list)
+    pprint(list_of_source_routers)
+    #variant A
+    next_router = {}
+    node = {}
+    if len(list_of_source_routers)==1:
+        for item in equipment_list:
+            if item['Hostname'] == list_of_source_routers[0]['name']:
+                next_router.update(item)
+        #Go to the next router and see route to the destination
+        result_of_query_routing_table = get_route_to_ip(destination_ip,next_router)
+        next_hop_ips = []
+        print(result_of_query_routing_table)
+        for route in result_of_query_routing_table:
+            if route[2].lower() != 'direct':
+                next_hop_ips.append(ipaddress.ip_address(route[3]))
+            else:
+                print(f'End router was finded!\n'
+                      f'End router that terminate subnet for destination IP is {next_router["Hostname"]}')
+                #  Should Do adding to graph.json
+                to_graph_json["nodes"].extend([{"name":next_router["Hostname"]}, {"name":f"{destination_ip}"}])
+                to_graph_json["links"].extend([{"source": source_id, "target": target_id}, {"source": source_id+1, "target": target_id+1}])
+                try:
+                    with open(r'flaskr/static/graph.json', 'w') as f:
+                        json.dump(to_graph_json, f)
+                    exit(-1)
+                except Exception as err:
+                    print(' Some error occured while write graph.json file\n',err)
+                    exit(-1)
+        print(next_hop_ips)
+        # Find to which router belongs this interface (from snapshot)
+        node = {}
+        for ip in next_hop_ips:
+            node = find_interface(ip,equipment_list)
+        print(node)
+        print(f' Next router is {node["Hostname"]}, mgmt-address is {node["IP-mgmt"]}')
+        #Next - is adding this information to graph.json
+        to_graph_json["nodes"].extend([{"name":node["Hostname"]}])
+        to_graph_json["links"].extend([{"source": source_id+1, "target": target_id+1}])
+
+    #Find other hops
+    flag = True
+    while flag:
+        result_of_query_routing_table = get_route_to_ip(destination_ip,node)
+        next_hop_ips = []
+        print(result_of_query_routing_table)
+        for route in result_of_query_routing_table:
+            if route[2].lower() != 'direct':
+                next_hop_ips.append(ipaddress.ip_interface(route[3]))
+            else:
+                print(f'End router was finded!\n'
+                      f'End router that terminate subnet for destination IP is {next_router["Hostname"]}')
+                #  Should Do adding to graph.json
+                to_graph_json["nodes"].extend([{"name":next_router["Hostname"]}, {"name":f"{destination_ip}"}])
+                to_graph_json["links"].extend([{"source": source_id, "target": target_id}, {"source": source_id+1, "target": target_id+1}])
+                try:
+                    with open(r'flaskr/static/graph.json', 'w') as f:
+                        json.dump(to_graph_json, f)
+                    exit(-1)
+                except Exception as err:
+                    print(' Some error occured while write graph.json file\n',err)
+                    exit(-1)
+        print(next_hop_ips)
+        # Find to which router belongs this interface (from snapshot)
+        node = {}
+        for ip in next_hop_ips:
+            node = find_interface(ip,equipment_list)
+        print(f' Next router is {node["Hostname"]}, mgmt-address is {node["IP-mgmt"]}')
+        #Next - is adding this information to graph.json
+        to_graph_json["nodes"].extend([{"name":node["Hostname"]}])
+        to_graph_json["links"].extend([{"source": source_id+1, "target": target_id+1}])
+
 
 
     

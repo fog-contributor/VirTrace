@@ -1,0 +1,17 @@
+Value Count (\d+)
+Value LPM_Route (\S+)
+Value Protocol (\S+)
+Value NextHop (\S+)
+Value State (\S+)
+Value Age (\S+)
+Value Tag (\S+)
+Value Interface (\S+)
+
+Start
+  ^Summary Count : ${Count}
+  ^Destination: ${LPM_Route}
+  ^ +Protocol: ${Protocol}
+  ^ +NextHop: ${NextHop}
+  ^ +State: ${State}.* Age: ${Age}
+  ^ +Tag: ${Tag}
+  ^.* Interface: ${Interface} -> Record
