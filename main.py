@@ -309,8 +309,8 @@ if __name__=='__main__':
 
     #pprint(create_json_to_visualize('5.5.5.5','1.1.1.1',equipment_list))
     #####################################
-    source_ip = '10.0.12.10'
-    destination_ip = '192.168.15.40'
+    source_ip = '11.1.1.1'
+    destination_ip = '6.6.6.6'
     source_id = 0
     target_id = 0
     #Define graph.json
@@ -323,6 +323,15 @@ if __name__=='__main__':
             [
             ]
     }
+    #Find destination IP
+    list_of_dest_routers = where_is_ip(destination_ip,equipment_list)
+    pprint(list_of_dest_routers)
+    if len(list_of_dest_routers) == 0:
+        print(f'Sorry, but this IP - {destination_ip} not belonging to any internal networks\n')
+        if (input('Do you want to proceed the action for seeing trace, if this IP in external network?').lower() == 'yes'):
+            pass
+        else:
+            exit(-1)
     #Find source IP
     list_of_source_routers = where_is_ip(source_ip,equipment_list)
     pprint(list_of_source_routers)
