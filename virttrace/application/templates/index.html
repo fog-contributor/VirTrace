@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>VirtTrace</title>
+</head>
+<body>
+
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    This is <strong>test version</strong> of VirtTrace. You should check in on some of those fields below.<br>
+    <p>Fow development phase  - username&password for connection to the actual hardware is hardcoded.</p>
+    <strong>Login</strong>= huawei<br>
+    <strong>Password</strong> = huawei<br>
+    Type of connection = ssh<br>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div class="alert alert-info" role="alert">
+    <p>1.  Load initial data and make snapshot of current network state. <strong>"Network state" == current active IP-interfaces.</strong><br>
+    You can do more that one snapshot, if you have more than one network states, but you can select only between 3 last snapshots.</p>
+    <p>2. Select (mark) interested snapshot and input source IP-address and destination IP-address for traceroute.</p>
+    <p>3. Push the button "Find Trace for Selected Snapshot"</p>
+    After a while you will be able to see the traceroute at new page in you browser.
+</div>
+
+<div class="row">
+    <div class="col-4">
+        <form action="graph" method="post" style="padding-bottom: 40px;">
+            {% csrf_token %}
+            <div class="form-group offset-md-1">
+                <label for="source_ip">Source IP address</label>
+                <input type="text" class="col-6 form-control" id="source_ip" aria-describedby="emailHelp" placeholder="Enter source IP">
+            </div>
+            <div class="form-group offset-md-1">
+                <label for="destination_ip">Destination IP</label>
+                <input type="text" class="col-6 form-control" id="destination_ip" placeholder="Enter destination IP">
+            </div>
+            <button type="submit" class="btn btn-primary offset-md-1">Find Trace for Selected Snapshot</button>
+        </form>
+    </div>
+    <div class="col-4">
+    <div class="form-group">
+        <label for="snapshot_select">Choose snapshot for analyzing</label>
+        <select multiple class="form-control" id="snapshot_select">
+            <option>{{ num }}</option>
+            <option>2</option>
+            <option>3</option>
+        </select>
+    </div>
+    </div>
+    <div class="col-4" >
+        <button type="button" class="btn btn-primary btn-lg btn-block">Get CSV-data<br>and<br>Make Snapshot</button>
+    </div>
+</div>
+
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>
