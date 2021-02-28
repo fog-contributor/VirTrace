@@ -12,7 +12,10 @@ What need to do:
 Virttrace now looks as follows - seeing video preview at youtube (GIF is clickable) 😀
 
 
-[![Demo CountPages alpha](https://user-images.githubusercontent.com/46422143/109428299-92baaf80-7a07-11eb-95d6-4cf3c0268042.gif)](https://youtu.be/r7qZCgAzI9Q![VirtTrace])
+[![Demo CountPages alpha](https://user-images.githubusercontent.com/46422143/109428679-23de5600-7a09-11eb-94e5-695de5176dad.gif)](https://youtu.be/r7qZCgAzI9Q![VirtTrace])
+
+
+
 
 
 
