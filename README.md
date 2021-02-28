@@ -12,7 +12,7 @@ What need to do:
 Virttrace now looks as follows - seeing video preview 😀
 
 
-[![Demo CountPages alpha](https://user-images.githubusercontent.com/46422143/109427876-6a31b600-7a05-11eb-862d-19eb77758ece.mp4)](https://www.youtube.com/watch?v=ek1j272iAmc)
+[![Demo CountPages alpha](https://user-images.githubusercontent.com/46422143/109428299-92baaf80-7a07-11eb-95d6-4cf3c0268042.gif)](https://youtu.be/r7qZCgAzI9Q![VirtTrace])
 
 
 
