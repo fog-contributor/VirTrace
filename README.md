@@ -9,7 +9,7 @@ What need to do:
 5. There is no web-interface for input IP-addresses (at this time this feature in development with Django)
 6. All code staff that actually you see - <b>need to be well organized</b> (functions and so on). For nowadays - it's "spagetti code"
 
-Virttrace now looks as follows - seeing video preview 😀
+Virttrace now looks as follows - seeing video preview at youtube (GIF is clickable) 😀
 
 
 [![Demo CountPages alpha](https://user-images.githubusercontent.com/46422143/109428299-92baaf80-7a07-11eb-95d6-4cf3c0268042.gif)](https://youtu.be/r7qZCgAzI9Q![VirtTrace])
