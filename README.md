@@ -12,8 +12,8 @@ What need to do:
 Virttrace now looks as follows - seeing video preview 😀
 
 
-[![Demo CountPages alpha](https://share.gifyoutube.com/KzB6Gb.gif)](https://www.youtube.com/watch?v=ek1j272iAmc)
+[![Demo CountPages alpha](https://user-images.githubusercontent.com/46422143/109427876-6a31b600-7a05-11eb-862d-19eb77758ece.mp4)](https://www.youtube.com/watch?v=ek1j272iAmc)
 
 
-https://user-images.githubusercontent.com/46422143/109427876-6a31b600-7a05-11eb-862d-19eb77758ece.mp4
+
 
