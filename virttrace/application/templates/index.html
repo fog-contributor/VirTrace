@@ -30,34 +30,46 @@
 </div>
 
 <div class="row">
-    <div class="col-4">
+    <div class="col-8">
         <form action="graph" method="post" style="padding-bottom: 40px;">
             {% csrf_token %}
             <div class="form-group offset-md-1">
                 <label for="source_ip">Source IP address</label>
-                <input type="text" class="col-6 form-control" id="source_ip" aria-describedby="emailHelp" placeholder="Enter source IP">
+                <input type="text" class="col-4 form-control" id="source_ip" name="s_ip"  placeholder="Enter source IP">
             </div>
             <div class="form-group offset-md-1">
                 <label for="destination_ip">Destination IP</label>
-                <input type="text" class="col-6 form-control" id="destination_ip" placeholder="Enter destination IP">
+                <input type="text" class="col-4 form-control" id="destination_ip" name="d_ip" placeholder="Enter destination IP">
+            </div>
+            <div class="form-group offset-md-1">
+                <label for="snapshot_select">Choose snapshot for analyzing</label>
+                <select multiple class="form-control" name="choose" id="snapshot_select">
+                    <option>{{ num_1 }}</option>
+                    <option>{{ num_2 }}</option>
+                    <option>{{ num_3 }}</option>
+                </select>
             </div>
             <button type="submit" class="btn btn-primary offset-md-1">Find Trace for Selected Snapshot</button>
         </form>
     </div>
-    <div class="col-4">
-    <div class="form-group">
-        <label for="snapshot_select">Choose snapshot for analyzing</label>
-        <select multiple class="form-control" id="snapshot_select">
-            <option>{{ num }}</option>
-            <option>2</option>
-            <option>3</option>
-        </select>
-    </div>
-    </div>
+
+
     <div class="col-4" >
-        <button type="button" class="btn btn-primary btn-lg btn-block">Get CSV-data<br>and<br>Make Snapshot</button>
+        <button type="button" name="get_data_and_make_snapshot" class="btn btn-primary btn-lg btn-block" onclick="location.href='{% url 'downloadexcel' %}'">Get CSV-data<br>and<br>Make Snapshot</button>
     </div>
 </div>
+
+
+{% if optional_log %}
+<div class="alert alert-primary" role="alert">
+    <ul>
+        {% for log in optional_log %}
+    <p> {{log}} </p>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 
 
 <!-- Optional JavaScript -->

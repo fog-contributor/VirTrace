@@ -202,7 +202,7 @@ def save_snapshot(nodes,mode='yaml'):
         if mode == 'yaml':
             with open(f'snapshot_{datetime.now().strftime("%d-%b-%Y_%H-%M-%S")}.yml','w') as file:
                 yaml.dump(nodes,file)
-                print(f'Snapshot was saved successfully!')
+                print(f'Snapshot was saved successfully! 👍')
         if mode == 'json': # Error will be ocurred - cause we can't serialize IPv4Interface obj. Will use pickle in future releases
             with open(f'snapshot_{datetime.now().strftime("%d-%b-%Y_%H-%M-%S")}.json','w') as file:
                 json.dump(nodes,file)
