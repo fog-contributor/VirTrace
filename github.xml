@@ -1,0 +1,7 @@
+<application>
+  <component name="GithubAccounts">
+    <account id="4a0271e6-dddf-4aaf-a223-dfd76f33b316" name="fog-contributor">
+      <server useHttp="false" host="github.com" />
+    </account>
+  </component>
+</application>
