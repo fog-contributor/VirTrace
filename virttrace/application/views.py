@@ -91,3 +91,4 @@ def downloadexcel(request):
         'index.html',
         context={'num_1':'First Snapshot','num_2':'Second_snapshot','num_3':'Third Snapshot', 'optional_log':sys.stdout.log},
     )
+
